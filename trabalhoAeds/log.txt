@@ -1,0 +1,3 @@
+Metodo: Binaria         | Tamanho Base: 10000   | Comparacoes: 14     | Tempo: 0.000000 seg
+Metodo: Binaria         | Tamanho Base: 10000   | Comparacoes: 13     | Tempo: 0.000000 seg
+Metodo: Binaria         | Tamanho Base: 10000   | Comparacoes: 13     | Tempo: 0.000000 seg
