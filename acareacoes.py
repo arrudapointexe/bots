@@ -234,11 +234,21 @@ def rodar_automacao_acareacao(sigla, usuario, senha, bot=None, chat_id=None):
                     
                     dados_cli = target_f.evaluate('''() => {
                         const buscar = (t) => {
+                            const termos = t.split("|").map(s => s.trim().toLowerCase());
                             const items = Array.from(document.querySelectorAll('.detail-item'));
-                            const found = items.find(i => i.innerText.includes(t));
+                            const found = items.find(i => {
+                                const text = i.innerText.toLowerCase();
+                                return termos.some(termo => text.includes(termo));
+                            });
                             return found ? found.querySelector('.value').innerText.replace("****", "").trim() : "N/A";
                         };
-                        return { nome: buscar("Customer Name"), tel: buscar("Customer phone"), end: buscar("Address"), bairro: buscar("Customer District"), cidade: buscar("Recipient City") };
+                        return {
+                            nome: buscar("Customer Name|Nome do Cliente"),
+                            tel: buscar("Customer phone|Telefone do Cliente"),
+                            end: buscar("Address|Endereço"),
+                            bairro: buscar("Consignee District|Customer District|Bairro"),
+                            cidade: buscar("Recipient City|Cidade do Destinatário")
+                        };
                     }''')
 
                     try:
@@ -287,14 +297,15 @@ def rodar_automacao_acareacao(sigla, usuario, senha, bot=None, chat_id=None):
                         }''')
                     except: motorista = "N/A"
 
-                    endereco_completo = f"{dados_cli['end']}, {dados_cli['bairro']}, {dados_cli['cidade']}".replace(", N/A", "").replace("N/A, ", "")
+                    endereco_completo = f"{dados_cli.get('end', 'N/A')}, {dados_cli.get('bairro', 'N/A')}, {dados_cli.get('cidade', 'N/A')}".replace(", N/A", "").replace("N/A, ", "")
 
                     dados_finais_excel.append({
                         "AWB": codigo,
                         "Motorista": motorista,
-                        "Subtipo": sub_tipo_da_linha, 
-                        "Nome": dados_cli['nome'],
-                        "Telefone": dados_cli['tel'],
+                        "Subtipo": sub_tipo_da_linha,
+                        "Nome": dados_cli.get('nome', 'N/A'),
+                        "Telefone": dados_cli.get('tel', 'N/A'),
+                        "Bairro": dados_cli.get('bairro', 'N/A'),
                         "Endereco": endereco_completo,
                         "Produto": produto,
                         "Valor": valor,
