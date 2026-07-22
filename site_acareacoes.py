@@ -59,10 +59,15 @@ def atualizar_estado_na_planilha(aba: str, df: pd.DataFrame) -> None:
     headers = rows[0]
     headers_lower = [str(header).strip().lower() for header in headers]
 
-    if "awb" not in headers_lower:
+    def encontrar_indice(*candidatos):
+        for nome in candidatos:
+            if nome in headers_lower:
+                return headers_lower.index(nome)
+        return None
+
+    awb_index = encontrar_indice("awb", "codigo", "waybill", "tracking")
+    if awb_index is None:
         awb_index = 0
-    else:
-        awb_index = headers_lower.index("awb")
 
     if "enviado" not in headers_lower:
         planilha.update_cell(1, len(headers) + 1, "Enviado")
@@ -73,16 +78,15 @@ def atualizar_estado_na_planilha(aba: str, df: pd.DataFrame) -> None:
 
     estados = {}
     for _, row in df.iterrows():
-        awb = str(row.get("AWB", "")).strip()
+        awb = str(row.get("AWB", row.get("codigo", row.get("Waybill", "")))).strip()
         if awb:
             estados[awb] = bool(row.get("Enviado", False))
 
     for row_number, row in enumerate(rows[1:], start=2):
-        if awb_index >= len(row):
-            continue
-        awb = str(row[awb_index]).strip()
-        if awb in estados:
-            planilha.update_cell(row_number, enviado_index + 1, "TRUE" if estados[awb] else "FALSE")
+        if awb_index is not None and awb_index < len(row):
+            awb = str(row[awb_index]).strip()
+            if awb in estados:
+                planilha.update_cell(row_number, enviado_index + 1, "TRUE" if estados[awb] else "FALSE")
 
 
 def encontrar_planilhas_google() -> list[str]:
